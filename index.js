@@ -21,9 +21,9 @@ app.use(urlencoded({ extended: false }));
 
 app.use(cookieParser());
 app.use(cors({
-    origin: 'http://localhost:3000', // Replace with your frontend domain
+    origin: ['http://localhost:3000', 'https://trust-guru-frontend.vercel.app'],
     credentials: true, // Allow cookies to be sent
-  }));
+}));
 dbConnection()
 app.get('/', (req, res) => {
     res.status(200).send("Welcome to fv bankend")
