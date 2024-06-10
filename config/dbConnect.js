@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
 const dbConnection = async () => {
-    const mongooseUrl = "mongodb://fundsverifier1:VBNH00TUX0X0jc6C@ac-o1kat8d-shard-00-00.zfnmndx.mongodb.net:27017,ac-o1kat8d-shard-00-01.zfnmndx.mongodb.net:27017,ac-o1kat8d-shard-00-02.zfnmndx.mongodb.net:27017/fundVerifier?ssl=true&authSource=admin&retryWrites=true&w=majority";
-    
+    const mongooseUrl = "mongodb://admin:rayKl9WcXLIVtqM1@ac-n999mho-shard-00-00.0z5atfb.mongodb.net:27017,ac-n999mho-shard-00-01.0z5atfb.mongodb.net:27017,ac-n999mho-shard-00-02.0z5atfb.mongodb.net:27017/trust_guru?ssl=true&authSource=admin&retryWrites=true&w=majority";
+   
     try {
         await mongoose.connect(mongooseUrl);
         console.log("Connected to MongoDB");

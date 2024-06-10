@@ -30,21 +30,26 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    userType: {
+      type: String,
+      enum: ['teacher', 'student'],
+      default: 'user',
+      required: true
+    },
     role: {
       type: String,
       enum: ['user', 'admin'],
       default: 'user'
     },
     isBlocked: {type: Boolean, default: false},
-
-    cart:{
-    type : Array,
-    default : []
-    },
+    courseOptions: [],
+    languageOptions: [],
+    profileImg:[],
+    
     address: {
       type : String,
     },
-    wishlist: [{type: mongoose.Schema.Types.ObjectId, ref: "Product"}],
+
     refreshToken:{type: String },
 
    passwordChangedAt: Date,
