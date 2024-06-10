@@ -1,7 +1,7 @@
 import jwt  from "jsonwebtoken";
 
 const generateRefreshToken = (id)=>{
-    let token = jwt.sign({id}, process.env.SECRET_KEY, {expiresIn: "3d"});
+    let token = jwt.sign({id}, "secret_key", {expiresIn: "3d"});
     return token;
 }
 
