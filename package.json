@@ -2,9 +2,9 @@
   "name": "trust_guru_backend",
   "version": "1.0.0",
   "description": "",
-  "main": "--env-file=.env index.js",
+  "main": "index.js",
   "scripts": {
-    "dev": "nodemon --env-file=.env index.js"
+    "dev": "nodemon index.js"
   },
   "type": "module",
   "author": "",
