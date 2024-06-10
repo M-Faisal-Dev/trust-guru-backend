@@ -4,12 +4,13 @@ import jwt from "jsonwebtoken";
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
   let token;
+  console.log(req?.headers)
   if (req?.headers?.authorization?.startsWith("Bearer ")) {
     token = req.headers.authorization.split(" ")[1];
 
     try {
       if (token) {
-        const decodedToken = jwt.verify(token, process.env.SECRET_KEY);
+        const decodedToken = jwt.verify(token, "secret_key");
     const user = await User.findById(decodedToken?.id)
     req.user = user;
     next()

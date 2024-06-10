@@ -4,14 +4,11 @@ import crypto from "crypto";
 
 const userSchema = new mongoose.Schema(
   {
-    firstname: {
+    fullName: {
       type: String,
       required: true
     },
-    lastname: {
-      type: String,
-      required: true
-    },
+ 
     email: {
       type: String,
       required: true,
@@ -32,7 +29,7 @@ const userSchema = new mongoose.Schema(
     },
     userType: {
       type: String,
-      enum: ['teacher', 'student'],
+      enum: ['Teacher', 'Student'],
       default: 'user',
       required: true
     },
