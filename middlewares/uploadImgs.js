@@ -94,6 +94,9 @@ const blogImgResize = async (req, res, next) => {
       next(error); // Pass any error to the error handler middleware
     }
   };
+
+
+
   const resizeSingleImage = async (req, res, next) => {
     if (!req.file) return next(); // If no file is uploaded, skip
     try {
@@ -117,7 +120,31 @@ const blogImgResize = async (req, res, next) => {
       next(error); // Pass any error to the error handler middleware
     }
   };
+
+  const resizeProductImage = async (req, res, next) => {
+    if (!req.file) return next(); // If no file is uploaded, skip
+    try {
+      const outputPath = req.file.path.replace(/\.\w+$/, '_resized.jpeg'); // Generate output file path
+      await sharp(req.file.path)
+        .resize(310, 210) // Resize to 300x300
+        .toFormat('jpeg') // Convert to JPEG format
+        .jpeg({ quality: 90 }) // Set JPEG quality to 90
+        .toFile(outputPath); // Save the resized image to a different file path
+      
+      // Asynchronously delete the original uploaded image
+      fs.unlink(req.file.path, (err) => {
+        if (err) {
+          console.error('Error deleting file:', err);
+        }
+      });
+      
+      req.file.path = outputPath; // Update the file path in the request object
+      next();
+    } catch (error) {
+      next(error); // Pass any error to the error handler middleware
+    }
+  };
   
   
 
-export { uploadPhoto, productImgResize,blogImgResize, uploadSingleImage, resizeSingleImage, resizeCoverImage };
+export { uploadPhoto, productImgResize,blogImgResize, uploadSingleImage, resizeSingleImage, resizeCoverImage, resizeProductImage };

@@ -11,16 +11,20 @@ import {
     addToWishList,
     addRating,
     uploadImgs,
-    deleteImgs
+    deleteImgs,
+    addPurchasedCourse
 } from '../controller/productCtrl.js'
 import { uploadPhoto, productImgResize } from '../middlewares/uploadImgs.js';
 
 
 
-router.post('/',authMiddleware,isAdmin, createProduct)
+router.post('/create',authMiddleware, createProduct)
 router.get('/', getAllProduct)
 router.get('/:id', getSingleProduct)
 router.put('/wishlist',authMiddleware,isAdmin, addToWishList)
+
+router.post('/add-purchased-course',authMiddleware, addPurchasedCourse)
+
 router.put('/rating',authMiddleware, addRating)
 router.put('/upload-imgs',authMiddleware,isAdmin, uploadPhoto.array('images',10),productImgResize, uploadImgs)
 router.put('/:id',authMiddleware,isAdmin, updateProduct)

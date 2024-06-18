@@ -1,14 +1,67 @@
-import mongoose from "mongoose";
-import bcrypt from "bcrypt";
-import crypto from "crypto";
+import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+
+const purchasedCourseSchema = new mongoose.Schema({
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CourseListing',
+    required: true
+  },
+  courseTitle: {
+    type: String,
+  },
+  purchaseDate: {
+    type: Date,
+    default: Date.now
+  },
+  plan: {
+    type: String,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true
+  }
+}, { _id: false });
+
+const studentPurchaseSchema = new mongoose.Schema({
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  studentName: {
+    type: String,
+    required: true
+  },
+  courseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'CourseListing',
+    required: true
+  },
+  courseTitle: {
+    type: String,
+  },
+  purchaseDate: {
+    type: Date,
+    default: Date.now
+  },
+  plan: {
+    type: String,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true
+  }
+}, { _id: false });
 
 const userSchema = new mongoose.Schema(
   {
     fullName: {
       type: String,
-      required: true
     },
- 
     email: {
       type: String,
       required: true,
@@ -29,8 +82,8 @@ const userSchema = new mongoose.Schema(
     },
     userType: {
       type: String,
-      enum: ['Teacher', 'Student'],
-      default: 'user',
+      enum: ['Teacher', 'student'],
+      default: 'Student', // Assuming 'Student' is the correct default userType
       required: true
     },
     role: {
@@ -38,50 +91,66 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user'
     },
-    isBlocked: {type: Boolean, default: false},
+    isBlocked: { type: Boolean, default: false },
     courseOptions: [],
     languageOptions: [],
-    profileImg:[],
-    
+    profileImg: [],
     address: {
-      type : String,
+      type: String,
     },
-
-    refreshToken:{type: String },
-
-   passwordChangedAt: Date,
-   passwordResetToken: String,
-   passwordResetTokenExpiresAt: Date,
-
+    refreshToken: { type: String },
+    purchasedCourses: [purchasedCourseSchema],
+    purchases: [studentPurchaseSchema],
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetTokenExpiresAt: Date,
+    teacherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TeacherDetails"
+    },
+    listedCourseId: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CourseListing"
+    }],
+    bankDetails: {
+      bankName: {
+        type: String,
+        default: ''
+      },
+      iban: {
+        type: String,
+        default: ''
+      },
+      accNumber: {
+        type: String,
+        default: ''
+      }
+    }
   },
-
   {
     timestamps: true
   }
 );
 
-
 userSchema.pre('save', async function(next) {
   if (this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, 10);
     this.confirmPassword = this.password;
-  
   }
   next();
 });
 
-userSchema.methods.isPasswordMatch = async function(enterdPassword){
-return await bcrypt.compare(enterdPassword, this.password)
-}
+userSchema.methods.isPasswordMatch = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
-userSchema.methods.createPasswordResetToken = async function(){
+userSchema.methods.createPasswordResetToken = function() {
   const resetToken = crypto.randomBytes(32).toString("hex");
   this.passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex");
-  this.passwordResetTokenExpiresAt = Date.now() + 30 * 60 * 1000;
-  return resetToken
-}
+  this.passwordResetTokenExpiresAt = Date.now() + 30 * 60 * 1000; // 30 minutes
+  return resetToken;
+};
 
-
-const User = mongoose.model('User', userSchema)
+const User = mongoose.model('User', userSchema);
 
 export default User;

@@ -1,7 +1,7 @@
 import User from "../models/userModel.js";
 import asyncHandler from "express-async-handler";
 import validateMongoId from "../ulits/validateMongodbId.js";
-import Product from "../models/productModel.js";
+import Product from "../models/courseListing.js";
 import slugify from "slugify";
 import {uploadFileToCloudinary,deleteFileFromCloudinary} from "../ulits/cloudinary.js";
 import fs from "fs";
@@ -10,12 +10,23 @@ import fs from "fs";
 
 // create product 
 const createProduct = asyncHandler(async(req,res)=>{
+  const {id} = req.user;
+  validateMongoId(id);
    try{
     
-        if(req.body.title){
-            req.body.slug = slugify(req.body.title);
-        }
-   const createPdt = await Product.create(req.body)
+    const productData = {
+      ...req.body,
+      userId: id
+    };
+
+    // Create slug if title is present
+    if (req.body.title) {
+      productData.slug = slugify(req.body.title);
+    }
+
+    // Create the product
+    const createPdt = await Product.create(productData);
+
    res.json(createPdt)
     }catch(err){
         throw new Error(err)
@@ -212,6 +223,75 @@ const deleteImgs = asyncHandler(async(req, res) => {
 })
 
 
+
+const addPurchasedCourse = asyncHandler(async (req, res) => {
+  const { id } = req.user; // Assumes user ID is in req.user
+  const { courseId, plan, price } = req.body;
+  console.log(courseId, plan, price )
+  validateMongoId(id);
+  validateMongoId(courseId);
+
+  try {
+    let user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    let course = await Product.findById(courseId).populate('userId');
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+
+    const purchasedCourse = {
+      courseId,
+      courseTitle: course.courseTitle,
+      plan,
+      price
+    };
+
+    user.purchasedCourses.push(purchasedCourse);
+  const SaveUser = await user.save();
+
+  console.log(SaveUser, "this is save user" )
+
+   
+      const teacher = await User.findById(course.userId[0]._id); // Correctly access the userId field
+      console.log(teacher, "this is teacher")
+     
+      if (!teacher) {
+        return res.status(404).json({ error: 'Teacher not found' });
+      }
+
+console.log(SaveUser._id, "this is student ")
+      const studentPurchase = {
+        studentId: SaveUser._id,
+        studentName: "Muhammad Faisal",
+        courseId,
+        courseTitle: "this is title",
+        plan,
+        price
+      };
+
+      teacher.purchases.push(studentPurchase);
+     const TeacherSave =  await teacher.save();
+    console.log(TeacherSave, "this is teacher save")
+
+
+
+
+
+    res.status(201).json({
+      message: 'Course purchased successfully',
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+
+
+
 export {
     createProduct,
     getSingleProduct,
@@ -221,5 +301,6 @@ export {
     addToWishList,
     addRating,
     uploadImgs,
-    deleteImgs
+    deleteImgs,
+    addPurchasedCourse
 }

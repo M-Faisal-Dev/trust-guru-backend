@@ -18,6 +18,10 @@ const UserSchema = new Schema({
         type: String,
         default: ''
     },
+    profileImage: {
+        type: String,
+        default: ''
+    },
     address: {
         type: String,
         default: ''
