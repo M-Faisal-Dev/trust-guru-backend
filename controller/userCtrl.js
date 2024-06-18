@@ -42,7 +42,7 @@ const loginUser = asyncHandler(async (req, res) => {
         { new: true }
       );
       res.cookie("refreshToken", refreshToken, {
-        // httpOnly: true,
+        httpOnly: true,
         // sameSite: 'None',
         maxAge: 72 * 60 * 60 * 1000,
       });
@@ -134,7 +134,7 @@ console.log("this is is faisflkjs dfkjalsdkf jjk")
   const user = await User.findOne({ refreshToken });
   if (!user) {
     res.clearCookie("refreshToken", {
-      // httpOnly: true,
+      httpOnly: true,
       // secure: true,
     });
     return res.sendStatus(204);
@@ -147,7 +147,7 @@ console.log("this is is faisflkjs dfkjalsdkf jjk")
     { new: true }
   );
   res.clearCookie("refreshToken", {
-    // httpOnly: true,
+    httpOnly: true,
     // secure: true,
   });
   res.sendStatus(204)

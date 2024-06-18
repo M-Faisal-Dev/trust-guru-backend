@@ -21,7 +21,6 @@ app.use(urlencoded({ extended: false }));
 
 app.use(cookieParser());
 app.use(cors({
-    origin: ['https://trust-guru-frontend.vercel.app', "https://www.trustyourguru.com"],
     credentials: true, // Allow cookies to be sent
 }));
 dbConnection()
