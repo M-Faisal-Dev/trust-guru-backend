@@ -16,7 +16,12 @@ import {
     forgetPasswordToken,
     resetPassword,
     loginAdmin,
-    updateUserProfile
+    updateUserProfile,
+    getStudentPurchasedCourses,
+    saveMessage,
+    getSanderMessages,
+    getPurchasesTeacher,
+    receivedMessages
   
 } from '../controller/userCtrl.js';
 
@@ -24,9 +29,16 @@ import {
 router.post("/register", createUser)
 router.post("/login", loginUser)
 router.post("/login-admin", loginAdmin)
+router.post('/messages/send/:id', authMiddleware, saveMessage);
 router.get("/all-users", getAllUser)
+// router.get("/sender-msg/:id", getSanderMessages)
+router.get("/sender-msg", authMiddleware, getSanderMessages)
+router.get("/receiver-msg", authMiddleware, receivedMessages)
+
 router.get("/refresh", handleRefreshToken)
 router.get("/logout", handleLogout)
+router.get("/student-purchased-courses", authMiddleware, getStudentPurchasedCourses)
+router.get("/teacher-purchased-courses",authMiddleware, getPurchasesTeacher)
 router.delete("/:id", deleteUser)
 router.post("/forget-password",forgetPasswordToken)
 router.put("/reset-password/:token", resetPassword)

@@ -57,6 +57,8 @@ const studentPurchaseSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+
+
 const userSchema = new mongoose.Schema(
   {
     fullName: {
@@ -82,7 +84,7 @@ const userSchema = new mongoose.Schema(
     },
     userType: {
       type: String,
-      enum: ['Teacher', 'student'],
+      enum: ['Teacher', 'Student'],
       default: 'Student', // Assuming 'Student' is the correct default userType
       required: true
     },
@@ -112,6 +114,15 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "CourseListing"
     }],
+    receivedMessages: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message'
+    }],
+    sentMessages: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message'
+    }],
+    
     bankDetails: {
       bankName: {
         type: String,

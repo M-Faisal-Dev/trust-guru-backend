@@ -1,7 +1,8 @@
 import asyncHandler from "express-async-handler";
 import User from "../models/userModel.js";
-// import Product from "../models/productModel.js";
-// import Coupon from "../models/couponModel.js";
+import Course from "../models/courseListing.js";
+import Message from '../models/massageModels.js'; 
+
 import generateToken from "../config/jwToken.js";
 import validateMongoId from "../ulits/validateMongodbId.js";
 import generateRefreshToken from "../config/refreshToken.js";
@@ -42,7 +43,7 @@ const loginUser = asyncHandler(async (req, res) => {
         { new: true }
       );
       res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
+        // httpOnly: true,
         // sameSite: 'None',
         maxAge: 72 * 60 * 60 * 1000,
       });
@@ -53,6 +54,9 @@ const loginUser = asyncHandler(async (req, res) => {
         email: findUser.email,
         mobile: findUser.mobile,
         userType: findUser.userType,
+        courseOptions: findUser.courseOptions,
+        languageOptions: findUser.languageOptions,
+        profileImg: findUser.profileImg,
         token: generateToken(findUser?._id),
       });
     } else {
@@ -134,7 +138,7 @@ console.log("this is is faisflkjs dfkjalsdkf jjk")
   const user = await User.findOne({ refreshToken });
   if (!user) {
     res.clearCookie("refreshToken", {
-      httpOnly: true,
+      // httpOnly: true,
       // secure: true,
     });
     return res.sendStatus(204);
@@ -348,229 +352,174 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 
 
+const getStudentPurchasedCourses = asyncHandler(async (req, res) => {
+  const id = req.user // This should come from req.params or req.body in a real application
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const purchasedCourses = user.purchasedCourses;
+    if (!purchasedCourses.length) {
+      return res.status(404).json({ message: "No purchased courses found for this user" });
+    }
+
+    const courseDetails = await Promise.all(
+      purchasedCourses.map(async (purchasedCourse) => {
+        const course = await Course.findById(purchasedCourse.courseId);
+        if (course) {
+          const courseOwner = await User.findById(course.userId).populate("teacherId");
+          if (courseOwner) {
+            console.log(courseOwner)
+            const { fullName, email, profileImg, } = courseOwner;
+            return {
+              ...purchasedCourse.toObject(),
+              courseOwner: {
+                fullName,
+                email,
+                userId: courseOwner._id,
+                userType : courseOwner.userType,
+                profileImg : courseOwner.teacherId.profileImage,
+              },
+            };
+          }
+        }
+        return null;
+      })
+    );
+
+    const validCourseDetails = courseDetails.filter((courseDetail) => courseDetail !== null);
+
+    const { fullName, email, profileImg } = user;
+
+    res.json({
+      user: {
+        fullName,
+        email,
+        userId: user._id,
+        profileImg,
+      },
+      purchasedCourses: validCourseDetails,
+    });
+  } catch (error) {
+    console.error("Error fetching purchased courses:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+
+const getPurchasesTeacher = asyncHandler(async (req, res) => {
+  const id = req.user;
+  try {
+    const user = await User.findById(id);
+    const getData = user ? user.purchases : [];
+    
+    // Get user and course details for each purchase
+    const purchasesWithDetails = await Promise.all(
+      getData.map(async (purchase) => {
+        const student = await User.findById(purchase.studentId, 'fullName email profileImg userType');
+        const course = await Course.findById(purchase.courseId);
+        console.log(student.userType)
+        return {
+          ...purchase._doc,
+          user: {
+            fullName: student?.fullName,
+            email: student?.email,
+            userId: student?._id,
+            profileImg: student?.profileImg,
+            userType: student?.userType
+          },
+          
+        };
+      })
+    );
+
+    res.json(purchasesWithDetails);
+  } catch (error) {
+    console.error("Error fetching purchases:", error);
+    res.status(500).json({ message: "Error fetching purchases", error: error.message });
+  }
+});
 
 
 
 
+const saveMessage = asyncHandler(async (req, res) => {
+  const recipientId = req.params.id;
+  const { id: senderId } = req.user;
+  const { text, senderName } = req.body;
+
+  try {
+    const recipientUser = await User.findById(recipientId);
+    if (!recipientUser) {
+      return res.status(404).json({ message: 'Recipient user not found' });
+    }
+
+    const newMessage = new Message({
+      text,
+      senderId,
+      senderName,
+      recipientId,
+      recipientName: recipientUser.fullName
+    });
+
+    await newMessage.save();
+
+    recipientUser.receivedMessages.push(newMessage._id);
+    await recipientUser.save();
+
+    const senderUser = await User.findById(senderId);
+    if (!senderUser) {
+      return res.status(404).json({ message: 'Sender user not found' });
+    }
+
+    senderUser.sentMessages.push(newMessage._id);
+    await senderUser.save();
+
+    res.status(201).json({ message: 'Message saved successfully' });
+  } catch (error) {
+    console.error('Error saving message:', error);
+    res.status(500).json({ message: 'Failed to save message', error: error.message });
+  }
+});
+
+// Get received messages for the logged-in user
+const receivedMessages = asyncHandler(async (req, res) => {
+  const { id: userId } = req.user;
+
+  try {
+    const user = await User.findById(userId).populate('receivedMessages');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(user.receivedMessages);
+  } catch (error) {
+    console.error('Error getting messages:', error);
+    res.status(500).json({ message: 'Failed to get messages', error: error.message });
+  }
+});
+
+// Get sent messages for the logged-in user
+const getSanderMessages = asyncHandler(async (req, res) => {
+  const { id: userId } = req.user;
+
+  try {
+    const user = await User.findById(userId).populate('sentMessages');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(user.sentMessages);
+  } catch (error) {
+    console.error('Error getting messages:', error);
+    res.status(500).json({ message: 'Failed to get messages', error: error.message });
+  }
+});
 
 
-// const getWishList = asyncHandler(async(req, res)=>{
-//   const {id} = req.user;
-//   try{
-// const findUser = await User.findById(id).populate("wishlist")
-// res.json(findUser)
-//   }catch(error){
-// throw new Error(error)
-//   }
-// })
-
-// // save your Address 
-
-// const saveAddress = asyncHandler(async (req, res) =>{
-//   const {id} = req.user;
-//   validateMongoId(id);
-//   try {
-//     const address = await User.findByIdAndUpdate(
-//       id,
-//       {
-//         address: req?.body?.address,
-//       },
-//       { new: true }
-//     );
-
-//     res.json(address);
-//   } catch (error) {
-//     throw new Error(error);
-//   }
-
-// }
-// )
-
-
-// const userCart = asyncHandler(async (req, res) => {
-//   const { cart } = req.body;
-//   const { id } = req.user;
-//   validateMongoId(id);
-//   try {
-//     const products = [];
-//     const user = await User.findById(id);
-
-//     // User ke liye mojood cart ko hata diya jaaye
-//     await Cart.deleteMany({ orderBy: user.id });
-
-//     for (let i = 0; i < cart.length; i++) {
-//       let object = {};
-//       object.product = cart[i].id;
-//       object.count = cart[i].count;
-//       let getPrice = await Product.findById(cart[i].id).select("price").exec();
-//       object.price = getPrice.price;
-//       products.push(object);
-//     }
-
-//     let cartTotal = 0;
-//     for (let i = 0; i < products.length; i++) {
-//       cartTotal += products[i].price * products[i].count;
-//     }
-
-
-//     let newCart = await new Cart({
-//       products,
-//       cartTotal,
-//       orderBy: user.id,
-//     }).save();
-
-//     res.json(newCart);
-//   } catch (error) {
-//     throw new Error(error);
-//   }
-// });
-
-
-// const getCart = asyncHandler(async (req, res) => {
-//   const {_id} = req.user;
-//   validateMongoId(_id);
-//   try{
-//     const cart = await Cart.findOne({orderBy: _id}).populate("products.product")
-// res.json(cart);
-
-//   }catch(error){
-//     throw new Error(error);
-//   }
-
-// })
-
-
-// const emptyCart = asyncHandler(async (req, res) => {
-//   const {_id} = req.user;
-//   validateMongoId(_id);
-//   try{
-//     const user = await User.findOne({_id})
-//     const cart = await Cart.findOneAndRemove({orderBy : user?._id})
-// res.json(cart);
-
-//   }catch(error){
-//     throw new Error(error);
-//   }
-
-// })
-
-
-
-// const applyCoupon = asyncHandler(async (req, res) => {
-//   const { coupon } = req.body;
-//   const { _id } = req.user;
-//   validateMongoId(_id);
-//   try {
-//     const validCoupon = await Coupon.findOne({ name: coupon });
-//     if (!validCoupon) {
-//       throw new Error("Invalid Coupon");
-//     }
-//     const user = await User.findOne({ _id });
-//     const cart = await Cart.findOne({
-//       orderBy: user?._id
-//     }).populate("products.product");
-
-//     const { products, cartTotal } = cart;
-//     const totalAfterDiscount = (cartTotal - (cartTotal * validCoupon.discount) / 100).toFixed(2);
-
-//     await Cart.findOneAndUpdate(
-//       { orderBy: user?._id },
-//       { totalAfterDiscount },
-//       { new: true }
-//     );
-
-//     res.json(totalAfterDiscount);
-//   } catch (error) {
-//   throw new Error(error);
-//   }
-// });
-
-
-// const createOrder = asyncHandler(async (req, res) => {
-//   const { COD, couponApplied } = req.body;
-//   const { _id } = req.user;
-//   // validateMongoId(_id); // Assuming this function is defined correctly
-
-//   try {
-//     if (!COD) throw new Error("Create cash order failed");
-
-//     const user = await User.findById(_id);
-//     let userCart = await Cart.findOne({ orderBy: user._id });
-//     let finalAmount = 0;
-
-//     if (couponApplied && userCart.totalAfterDiscount) {
-//       finalAmount = userCart.totalAfterDiscount;
-//     } else {
-//       finalAmount = userCart.cartTotal;
-//     }
-
-//     let newOrder = await new Order({
-//       products: userCart.products,
-//       paymentIntent: {
-//         id: uniqid(),
-//         method: "COD",
-//         amount: finalAmount,
-//         status: "Cash on Delivery",
-//         created: Date.now(),
-//         currency: "usd",
-//       },
-//       orderBy: user._id,
-//       orderStatus: "Cash on Delivery",
-//     }).save();
-
-//     let update = userCart.products.map((item) => {
-//       return {
-//         updateOne: {
-//           filter: { _id: item.product._id },
-//           update: { $inc: { quantity: item.count, sold: +item.count } },
-//         },
-//       };
-//     });
-
-//     const updated = await Product.bulkWrite(update, {});
-
-//     res.json({ message: "Order successfully updated" });
-//   } catch (error) {
-//    throw new Error(error)
-//   }
-// });
-
-
-// const getOrder = asyncHandler(async(req, res) => {
-//   const {_id} = req.user;
-//   validateMongoId(_id);
-//   try{
-// const userOrder = await Order.findOne({orderBy : _id}).populate("products.product").exec()
-// res.json(userOrder)
-//   }catch(error){
-//     throw new Error(error);
-//   }
-// })
-
-
-// const updateOrderStatus = asyncHandler(async (req, res) => {
-//   const { id } = req.params;
-//   const { status } = req.body;
-
-//   validateMongoId(id);
-
-//   try {
-//     const updateOrder = await Order.findByIdAndUpdate(
-//       id,
-//       {
-//         orderStatus: status,
-//         paymentIntent: {
-//           status: status
-//         }
-//       },
-//       { new: true }
-//     );
-
-//     res.json(updateOrder);
-//   } catch (error) {
-//    throw  new Error(error)
-//   }
-// });
 
 
 export {
@@ -588,7 +537,13 @@ export {
   forgetPasswordToken,
   resetPassword,
   loginAdmin,
-  updateUserProfile
+  updateUserProfile,
+  getStudentPurchasedCourses,
+  saveMessage,
+  getSanderMessages,
+  receivedMessages,
+  getPurchasesTeacher
+
 
   
 };
