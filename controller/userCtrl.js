@@ -8,7 +8,7 @@ import validateMongoId from "../ulits/validateMongodbId.js";
 import generateRefreshToken from "../config/refreshToken.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-// import sendEmail from "./emailCtrl.js";
+import sendEmail from "../libs/nodeMailer.js";
 // import Order from "../models/orderModel.js";
 // import uniqid from "uniqid"
 
@@ -296,6 +296,40 @@ throw new Error(error);
 
 // forget password token 
 
+const findUserbyEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  console.log(req.body)
+console.log(email)
+  try {
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ msg: "User not found with this email address" });
+    }
+
+    console.log(user._id);
+
+    // Generate reset URL
+    const resetURL = `https://www.trustyourguru.com/reset-password/${user._id}`;
+
+    // Email data
+    const data = {
+      to: email,
+      subject: "Reset Password",
+      text: `Your password reset link is: ${resetURL}`,
+      html: `<p>Your password reset link is: <a href="${resetURL}">Reset Password</a></p>`,
+    };
+
+    // Send email
+    await sendEmail(data);
+
+    res.status(200).json({ msg: "Email sent successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Failed to find email. Please try again." });
+  }
+});
+
 
 const forgetPasswordToken = asyncHandler(async (req, res) => {
   const { email } = req.body;
@@ -328,13 +362,9 @@ const forgetPasswordToken = asyncHandler(async (req, res) => {
 
 const resetPassword = asyncHandler(async (req, res) => {
   const { password } = req.body;
-  const { token } = req.params;
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  const { id } = req.params;
   
-  const user = await User.findOne({
-    passwordResetToken: hashedToken,
-    passwordResetTokenExpiresAt: { $gt: Date.now() },
-  });
+  const user = await User.findById(id);
   
   if (!user) {
     throw new Error("Token Expired, please try again later");
@@ -542,7 +572,8 @@ export {
   saveMessage,
   getSanderMessages,
   receivedMessages,
-  getPurchasesTeacher
+  getPurchasesTeacher,
+  findUserbyEmail
 
 
   

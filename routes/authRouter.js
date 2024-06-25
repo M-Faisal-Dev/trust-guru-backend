@@ -21,7 +21,8 @@ import {
     saveMessage,
     getSanderMessages,
     getPurchasesTeacher,
-    receivedMessages
+    receivedMessages,
+    findUserbyEmail
   
 } from '../controller/userCtrl.js';
 
@@ -31,6 +32,7 @@ router.post("/login", loginUser)
 router.post("/login-admin", loginAdmin)
 router.post('/messages/send/:id', authMiddleware, saveMessage);
 router.get("/all-users", getAllUser)
+router.post("/find-email", findUserbyEmail)
 // router.get("/sender-msg/:id", getSanderMessages)
 router.get("/sender-msg", authMiddleware, getSanderMessages)
 router.get("/receiver-msg", authMiddleware, receivedMessages)
@@ -41,7 +43,7 @@ router.get("/student-purchased-courses", authMiddleware, getStudentPurchasedCour
 router.get("/teacher-purchased-courses",authMiddleware, getPurchasesTeacher)
 router.delete("/:id", deleteUser)
 router.post("/forget-password",forgetPasswordToken)
-router.put("/reset-password/:token", resetPassword)
+router.put("/reset-password/:id", resetPassword)
 router.put("/password",authMiddleware, updatePassword)
 router.put("/edit-user",authMiddleware, updateUser)
 router.put("/updateProfile",authMiddleware, updateUserProfile)
