@@ -3,8 +3,7 @@ import asyncHandler from "express-async-handler";
 import validateMongoId from "../ulits/validateMongodbId.js";
 import Product from "../models/courseListing.js";
 import slugify from "slugify";
-import {uploadFileToCloudinary,deleteFileFromCloudinary} from "../ulits/cloudinary.js";
-import fs from "fs";
+
 
 
 
@@ -187,40 +186,10 @@ res.json(finalProduct)
   }
 });
 
-const uploadImgs = asyncHandler(async(req, res) => {
-  try{
-    const uploader = (path) => uploadFileToCloudinary(path, "images");
-    const urls = [];
-    const files = req.files;
-    for(const file of files){
-      const {path} = file;
-      const newPath = await uploader(path);
-      urls.push(newPath);
-      fs.unlinkSync(path);
-    }
-
-    const images = urls.map((item) => {
-      return item
-    })
-    res.json(images)
-
-  }catch(err){
-    throw new Error(err)
-  }
-})
 
 
-const deleteImgs = asyncHandler(async(req, res) => {
-  const {id} = req.params;
-  try{
-    const Deleted = deleteFileFromCloudinary(id, "images");
-    res.json({message: "Image deleted successfully"})
-  
- 
-  }catch(err){
-    throw new Error(err)
-  }
-})
+
+
 
 
 
@@ -300,7 +269,5 @@ export {
     deleteProduct,
     addToWishList,
     addRating,
-    uploadImgs,
-    deleteImgs,
     addPurchasedCourse
 }

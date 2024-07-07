@@ -6,20 +6,28 @@ import {
   getAllTeachers,
   updateTeacher,
   deleteTeacher,
-  updateBankdetail
+  updateBankdetail,
+  getSingleTeacherByToken,
+  updateSkillsAndBiography,
+  createUpdatePoints,
+  SingleTeacher
 } from '../controller/teacherCtrl.js';
 const router = express.Router();
 
 // Create a new teacher
-router.post('/create', authMiddleware, createTeacher);
-
 router.get('/', getAllTeachers);
+router.post('/create', authMiddleware, createTeacher);
+router.get('/get-single-teacher', authMiddleware, getSingleTeacherByToken);
+
+router.get('/:id', SingleTeacher);
+
 
 // Get a single teacher by ID
-router.get('/:id', getSingleTeacher);
 
 // Update a teacher by ID
 router.put('/update-back-details', authMiddleware, updateBankdetail);
+router.put('/update-skills', authMiddleware, updateSkillsAndBiography);
+router.put('/update-point', authMiddleware, createUpdatePoints);
 router.put('/:id', authMiddleware, isAdmin, updateTeacher);
 
 // Delete a teacher by ID

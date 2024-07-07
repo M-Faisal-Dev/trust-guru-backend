@@ -1,6 +1,15 @@
 import mongoose from "mongoose";
 const Schema = mongoose.Schema;
 
+const skillSchema = new Schema({
+    skill: {
+      type: String,
+    },
+    skillPercentage: {
+      type: String,
+    },
+  })
+
 const UserSchema = new Schema({
     fullName: {
         type: String,
@@ -59,7 +68,15 @@ const UserSchema = new Schema({
     accNumber: {
         type: String,
         default: ''
-    }
+    },
+    biography: {
+        type: String,
+      },
+      skills: [skillSchema],
+      totalPoints: { type: Number, default: 0 },
+      lastMonth: { type: Number, default: 0 },
+      averageScore: { type: Number, default: 0 },
+      numClients: { type: Number, default: 0 },
 }, {
     timestamps: true
 });

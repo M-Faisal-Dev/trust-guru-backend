@@ -549,6 +549,17 @@ const getSanderMessages = asyncHandler(async (req, res) => {
   }
 });
 
+const getSingleUserWithToken = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  validateMongoId(id);
+  try {
+    const getSingUser = await User.findById(id);
+    res.json(getSingUser.bankDetails);
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
 
 
 
@@ -573,7 +584,8 @@ export {
   getSanderMessages,
   receivedMessages,
   getPurchasesTeacher,
-  findUserbyEmail
+  findUserbyEmail,
+  getSingleUserWithToken
 
 
   

@@ -3,6 +3,7 @@ import asyncHandler from "express-async-handler";
 import validateMongoId from "../ulits/validateMongodbId.js";
 import User from "../models/userModel.js";
 
+
 // Create teacher
 const createTeacher = asyncHandler(async (req, res) => {
   const {id} = req.user;
@@ -36,10 +37,98 @@ const getSingleTeacher = asyncHandler(async (req, res) => {
   }
 });
 
+const getSingleTeacherByToken = asyncHandler(async (req, res) => {
+ const {id} = req.user;
+ console.log(id)
+  validateMongoId(id);
+  try {
+    const getUser = await User.findById(id);
+    if (!getUser) {
+      return res.status(404).json({ error: "Teacher not found" });
+    }
+    const getTeacher = await Teacher.findById(getUser.teacherId);
+    res.json(getTeacher);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+const SingleTeacher = asyncHandler(async (req, res) => {
+  const {id} = req.params;
+  console.log(id)
+   validateMongoId(id);
+   try {
+     const getTeacher = await Teacher.findById(id);
+     res.json(getTeacher);
+   } catch (err) {
+     res.status(400).json({ error: err.message });
+   }
+ });
+
+const createUpdatePoints = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  const { skills, passion, commitment, results } = req.body; // Assuming these are provided in the request body
+
+  console.log(id);
+  validateMongoId(id);
+
+  try {
+    // Find the user and validate
+    const getUser = await User.findById(id);
+    if (!getUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    // Find the teacher associated with the user
+    let getTeacher = await Teacher.findById(getUser.teacherId);
+
+    // Calculate the new points
+    const newTotalPoints = skills + passion + commitment + results;
+
+    // Update or create points accordingly
+    if (getTeacher.totalPoints != null) {
+      // Update existing points
+      getTeacher.totalPoints += newTotalPoints;
+      getTeacher.lastMonth = 147; // Example value, replace with actual logic if needed
+      getTeacher.averageScore = (getTeacher.totalPoints / 4).toFixed(1); // Example calculation, replace with actual logic if needed
+      getTeacher.numClients = 21; // Example value, replace with actual logic if needed
+    } else {
+      // Create new points
+      getTeacher.totalPoints = newTotalPoints;
+      getTeacher.lastMonth = 147; // Example value, replace with actual logic if needed
+      getTeacher.averageScore = (newTotalPoints / 4).toFixed(1); // Example calculation, replace with actual logic if needed
+      getTeacher.numClients = 21; // Example value, replace with actual logic if needed
+    }
+
+    // Save the updated or new teacher document
+    await getTeacher.save();
+
+    // Send the response
+    res.json({
+      totalPoints: getTeacher.totalPoints,
+      lastMonth: getTeacher.lastMonth,
+      averageScore: getTeacher.averageScore,
+      numClients: getTeacher.numClients
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+
 // Get all teachers
 const getAllTeachers = asyncHandler(async (req, res) => {
+  const minTrustPoints = 1; // Define the minimum trust points threshold
+  const page = parseInt(req.query.page) || 1; // Current page number, default to 1
+  const limit = parseInt(req.query.limit) || 10; // Number of results per page, default to 10
+
   try {
-    const teachers = await Teacher.find();
+    // Query to find teachers with totalPoints >= minTrustPoints, sorted by totalPoints descending
+    const teachers = await Teacher.find({ totalPoints: { $gte: minTrustPoints } })
+      .sort({ totalPoints: -1 }) // Sort by totalPoints descending (high to low)
+      .skip((page - 1) * limit) // Skip records based on pagination
+      .limit(limit); // Limit number of records per page
+
     res.json(teachers);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -86,6 +175,33 @@ const updateBankdetail = asyncHandler(async (req, res) => {
   }
 });
 
+const updateSkillsAndBiography = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+
+  validateMongoId(id);
+
+  try {
+    const getUser = await User.findById(id);
+
+    if (!getUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const updateFields = {};
+    if (req.body.skills) updateFields.skills = req.body.skills;
+    if (req.body.biography) updateFields.biography = req.body.biography;
+
+    const updatedUser = await Teacher.findByIdAndUpdate(
+      getUser.teacherId,
+      updateFields,
+      { new: true }
+    );
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Delete teacher by ID
 const deleteTeacher = asyncHandler(async (req, res) => {
@@ -108,5 +224,9 @@ export {
   getAllTeachers,
   updateTeacher,
   deleteTeacher,
-  updateBankdetail
+  updateBankdetail,
+  getSingleTeacherByToken,
+  updateSkillsAndBiography,
+  createUpdatePoints,
+  SingleTeacher
 };
