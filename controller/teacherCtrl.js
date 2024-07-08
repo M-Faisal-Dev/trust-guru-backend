@@ -117,8 +117,27 @@ const createUpdatePoints = asyncHandler(async (req, res) => {
 
 
 // Get all teachers
-const getAllTeachers = asyncHandler(async (req, res) => {
+const getAllTeacherwithPoints = asyncHandler(async (req, res) => {
   const minTrustPoints = 1; // Define the minimum trust points threshold
+  const page = parseInt(req.query.page) || 1; // Current page number, default to 1
+  const limit = parseInt(req.query.limit) || 10; // Number of results per page, default to 10
+
+  try {
+    // Query to find teachers with totalPoints >= minTrustPoints, sorted by totalPoints descending
+    const teachers = await Teacher.find({ totalPoints: { $gte: minTrustPoints } })
+      .sort({ totalPoints: -1 }) // Sort by totalPoints descending (high to low)
+      .skip((page - 1) * limit) // Skip records based on pagination
+      .limit(limit); // Limit number of records per page
+
+    res.json(teachers);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+
+const getAllTeachers = asyncHandler(async (req, res) => {
+  const minTrustPoints = 0; // Define the minimum trust points threshold
   const page = parseInt(req.query.page) || 1; // Current page number, default to 1
   const limit = parseInt(req.query.limit) || 10; // Number of results per page, default to 10
 
@@ -228,5 +247,6 @@ export {
   getSingleTeacherByToken,
   updateSkillsAndBiography,
   createUpdatePoints,
+  getAllTeacherwithPoints,
   SingleTeacher
 };

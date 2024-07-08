@@ -10,12 +10,14 @@ import {
   getSingleTeacherByToken,
   updateSkillsAndBiography,
   createUpdatePoints,
-  SingleTeacher
+  SingleTeacher,
+  getAllTeacherwithPoints
 } from '../controller/teacherCtrl.js';
 const router = express.Router();
 
 // Create a new teacher
-router.get('/', getAllTeachers);
+router.get('/', getAllTeacherwithPoints);
+router.get('/get-all', getAllTeachers);
 router.post('/create', authMiddleware, createTeacher);
 router.get('/get-single-teacher', authMiddleware, getSingleTeacherByToken);
 

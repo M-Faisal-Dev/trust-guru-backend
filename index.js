@@ -26,7 +26,7 @@ app.use(cookieParser());
 // }));
 dbConnection()
 app.get('/', (req, res) => {
-    res.status(200).send("Welcome to fv bankend")
+    res.status(200).send("Welcome to bankend")
 })
 
 
