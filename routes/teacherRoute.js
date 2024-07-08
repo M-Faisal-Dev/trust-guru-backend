@@ -20,6 +20,7 @@ router.get('/', getAllTeacherwithPoints);
 router.get('/get-all', getAllTeachers);
 router.post('/create', authMiddleware, createTeacher);
 router.get('/get-single-teacher', authMiddleware, getSingleTeacherByToken);
+router.put('/update-point/:id', createUpdatePoints);
 
 router.get('/:id', SingleTeacher);
 
@@ -29,7 +30,6 @@ router.get('/:id', SingleTeacher);
 // Update a teacher by ID
 router.put('/update-back-details', authMiddleware, updateBankdetail);
 router.put('/update-skills', authMiddleware, updateSkillsAndBiography);
-router.put('/update-point', authMiddleware, createUpdatePoints);
 router.put('/:id', authMiddleware, isAdmin, updateTeacher);
 
 // Delete a teacher by ID

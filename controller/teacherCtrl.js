@@ -2,6 +2,7 @@ import Teacher from "../models/teacherUserModel.js"; // Adjust the import based 
 import asyncHandler from "express-async-handler";
 import validateMongoId from "../ulits/validateMongodbId.js";
 import User from "../models/userModel.js";
+import CourseListing from "../models/courseListing.js";
 
 
 // Create teacher
@@ -116,7 +117,7 @@ const SingleTeacher = asyncHandler(async (req, res) => {
  });
 
 const createUpdatePoints = asyncHandler(async (req, res) => {
-  const { id } = req.user;
+  const { id } = req.params;
   const { skills, passion, commitment, results } = req.body; // Assuming these are provided in the request body
 
   console.log(id);
@@ -124,10 +125,11 @@ const createUpdatePoints = asyncHandler(async (req, res) => {
 
   try {
     // Find the user and validate
-    const getUser = await User.findById(id);
-    if (!getUser) {
+    const getCourse = await CourseListing.findById(id);
+    if (!getCourse) {
       return res.status(404).json({ error: "User not found" });
     }
+    let getUser = await User.findById(getCourse.userId[0])
     
     // Find the teacher associated with the user
     let getTeacher = await Teacher.findById(getUser.teacherId);
