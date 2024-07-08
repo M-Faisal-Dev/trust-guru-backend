@@ -87,8 +87,45 @@ const getAllProduct = asyncHandler(async (req, res) => {
       throw new Error(err);
     }
   });
+
+
+
+
   
   
+  
+
+// getCourseByToken 
+const getCourseByToken = asyncHandler(async (req, res) => {
+  const {id} = req.params;// Assuming this is the teacher's ID
+  validateMongoId(id); // Validate the provided ID
+
+  try {
+    // Find users by teacherId
+    const getUserCourses = await User.find({ teacherId: id });
+
+    if (!getUserCourses || getUserCourses.length === 0) {
+      return res.status(404).json({ error: "Users not found" });
+    }
+
+    // Array to store all courses
+    let allCourses = [];
+
+    // Iterate through each user to find their courses
+    for (let user of getUserCourses) {
+      // Find courses based on userId (assuming it's stored in Product as userId)
+      const courses = await Product.find({ userId: user._id });
+      allCourses.push(...courses); // Push courses into the allCourses array
+    }
+
+    res.json(allCourses); // Return all courses found
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ error: "Server Error" });
+  }
+});
+
+
 
 // get update product 
 const updateProduct = asyncHandler(async(req,res)=>{
@@ -269,5 +306,6 @@ export {
     deleteProduct,
     addToWishList,
     addRating,
-    addPurchasedCourse
+    addPurchasedCourse,
+    getCourseByToken
 }

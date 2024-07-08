@@ -5,22 +5,72 @@ import User from "../models/userModel.js";
 
 
 // Create teacher
+// const createTeacher = asyncHandler(async (req, res) => {
+//   const {id} = req.user;
+//   console.log(id, "this is user id")
+//   validateMongoId(id);
+//   try {
+//     const createdTeacher = await Teacher.create(req.body);
+//     const updatedUser = await User.findByIdAndUpdate(id, { teacherId: createdTeacher._id }, { new: true });
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ error: 'User not found' });
+//     }
+//     res.status(201).json(createdTeacher);
+//   } catch (err) {
+//     res.status(400).json({ error: err.message });
+//   }
+// });
+
 const createTeacher = asyncHandler(async (req, res) => {
-  const {id} = req.user;
-  console.log(id, "this is user id")
+  const { id } = req.user;
+  console.log(id, "this is user id");
   validateMongoId(id);
+
   try {
-    const createdTeacher = await Teacher.create(req.body);
-    const updatedUser = await User.findByIdAndUpdate(id, { teacherId: createdTeacher._id }, { new: true });
+    let updatedUser;
+
+    // Check if teacher profile already exists for the provided email
+    const existingTeacher = await Teacher.findOne({ email: req.body.email });
+
+    if (existingTeacher) {
+      // Update existing teacher profile
+      const updatedTeacher = await Teacher.findOneAndUpdate(
+        { email: req.body.email },
+        req.body,
+        { new: true }
+      );
+      updatedUser = await User.findByIdAndUpdate(
+        id,
+        { teacherId: updatedTeacher._id },
+        { new: true }
+      );
+    } else {
+      // Create new teacher profile
+      const createdTeacher = await Teacher.create({
+        ...req.body,
+        createdBy: id  // Ensure createdBy field is set to user id
+      });
+      updatedUser = await User.findByIdAndUpdate(
+        id,
+        { teacherId: createdTeacher._id },
+        { new: true }
+      );
+    }
 
     if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.status(201).json(createdTeacher);
+
+    res.status(201).json(updatedUser);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
+
+
+
+
 
 // Get single teacher by ID
 const getSingleTeacher = asyncHandler(async (req, res) => {
