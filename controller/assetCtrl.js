@@ -9,7 +9,7 @@ import validateMongoId from "../ulits/validateMongodbId.js";
 
 const uploadProfile = asyncHandler(async (req, res) => {
     try {
-        const baseUrl = req.protocol + '://' + req.get('host'); // Get base URL of the server
+      const baseUrl = 'https://' + req.get('host'); // Force HTTPS for the base URL
         
         // Get the file details from the request
         const { path } = req.file;

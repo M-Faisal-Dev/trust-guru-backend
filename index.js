@@ -36,3 +36,24 @@ app.use("/api/", routes);
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+
+
+
+
+
+// server {
+//     listen 443 ssl;
+//     server_name backend.trustyourguru.com;
+
+//     ssl_certificate /path/to/fullchain.pem;
+//     ssl_certificate_key /path/to/privkey.pem;
+
+//     location / {
+//         proxy_pass http://localhost:your_backend_port;
+//         proxy_set_header X-Forwarded-Proto $scheme;
+//         proxy_set_header Host $host;
+//         # other proxy settings
+//     }
+// }
+// app.set('trust proxy', 1);
