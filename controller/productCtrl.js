@@ -89,10 +89,6 @@ const getAllProduct = asyncHandler(async (req, res) => {
   });
 
 
-
-
-  
-  
   
 
 // getCourseByToken 

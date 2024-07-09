@@ -19,6 +19,10 @@ const UserSchema = new Schema({
         type: String,
         default: ''
     },
+    profession: {
+        type: String,
+        default: ''
+    },
     country: {
         type: String,
         default: ''

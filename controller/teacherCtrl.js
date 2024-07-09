@@ -31,13 +31,19 @@ const createTeacher = asyncHandler(async (req, res) => {
   try {
     let updatedUser;
 
-    // Check if teacher profile already exists for the provided email
-    const existingTeacher = await Teacher.findOne({ email: req.body.email });
+    // Find user and check if teacherId exists
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if teacher profile already exists for the provided teacherId
+    const existingTeacher = await Teacher.findById(user.teacherId);
 
     if (existingTeacher) {
       // Update existing teacher profile
-      const updatedTeacher = await Teacher.findOneAndUpdate(
-        { email: req.body.email },
+      const updatedTeacher = await Teacher.findByIdAndUpdate(
+        user.teacherId,
         req.body,
         { new: true }
       );
@@ -73,6 +79,7 @@ const createTeacher = asyncHandler(async (req, res) => {
 
 
 
+
 // Get single teacher by ID
 const getSingleTeacher = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -90,10 +97,10 @@ const getSingleTeacher = asyncHandler(async (req, res) => {
 
 const getSingleTeacherByToken = asyncHandler(async (req, res) => {
  const {id} = req.user;
- console.log(id)
   validateMongoId(id);
   try {
     const getUser = await User.findById(id);
+    console.log(getUser, "get user")
     if (!getUser) {
       return res.status(404).json({ error: "Teacher not found" });
     }

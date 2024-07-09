@@ -23,7 +23,8 @@ import {
     getPurchasesTeacher,
     receivedMessages,
     findUserbyEmail,
-    getSingleUserWithToken
+    getSingleUserWithToken,
+    checkPurchasedCourses
   
 } from '../controller/userCtrl.js';
 
@@ -34,6 +35,7 @@ router.post("/login-admin", loginAdmin)
 router.post('/messages/send/:id', authMiddleware, saveMessage);
 router.get("/all-users", getAllUser)
 router.get("/single-user", authMiddleware, getSingleUserWithToken)
+router.get("/check-user/:id", authMiddleware, checkPurchasedCourses)
 router.post("/find-email", findUserbyEmail)
 // router.get("/sender-msg/:id", getSanderMessages)
 router.get("/sender-msg", authMiddleware, getSanderMessages)

@@ -562,6 +562,30 @@ const getSingleUserWithToken = asyncHandler(async (req, res) => {
 
 
 
+const checkPurchasedCourses = asyncHandler(async (req, res) => {
+  const courseId = req.params.id;
+  const { id } = req.user;
+  validateMongoId(id);
+  
+  try {
+    const getSingUser = await User.findById(id);
+    console.log(getSingUser.purchasedCourses);
+    const purchasedCourse = getSingUser.purchasedCourses.find(course => course.courseId.toString() === courseId);
+
+    if (purchasedCourse) {
+      res.json({ found: true, course: purchasedCourse });
+    } else {
+      res.json({ found: false, message: 'Course not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+
+
+
 
 export {
   createUser,
@@ -585,7 +609,8 @@ export {
   receivedMessages,
   getPurchasesTeacher,
   findUserbyEmail,
-  getSingleUserWithToken
+  getSingleUserWithToken,
+  checkPurchasedCourses
 
 
   
